@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Users, Settings, FileText } from 'lucide-react';
@@ -19,12 +20,23 @@ interface FounderSubmission {
   contacted: boolean;
 }
 
+interface SiteContentRow {
+  id: string;
+  section: string;
+  content: any;
+  updated_at: string;
+}
+
 export default function Admin() {
   const { user, logout, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [submissions, setSubmissions] = useState<FounderSubmission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
+  const [contentRows, setContentRows] = useState<SiteContentRow[]>([]);
+  const [loadingContent, setLoadingContent] = useState(true);
+  const [editingContent, setEditingContent] = useState<Record<string, string>>({});
+  const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -37,6 +49,31 @@ export default function Admin() {
       fetchSubmissions();
     }
   }, [isAuthenticated]);
+
+  const fetchContent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_content')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      setContentRows(data || []);
+      const map: Record<string, string> = {};
+      (data || []).forEach((row: any) => {
+        map[row.id] = JSON.stringify(row.content ?? {}, null, 2);
+      });
+      setEditingContent(map);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch content",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingContent(false);
+    }
+  };
 
   const fetchSubmissions = async () => {
     try {
