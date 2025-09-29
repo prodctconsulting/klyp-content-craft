@@ -8,7 +8,7 @@ import { AudienceSection } from "@/components/sections/AudienceSection";
 import { FoundingUserSection } from "@/components/sections/FoundingUserSection";
 import { FooterSection } from "@/components/sections/FooterSection";
 import { SignUpModal } from "@/components/SignUpModal";
-import { SiteContentProvider } from "@/hooks/useSiteContent";
+import { SiteContentProvider } from "@/providers/SiteContentProvider";
 
 export default function LandingPage() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);

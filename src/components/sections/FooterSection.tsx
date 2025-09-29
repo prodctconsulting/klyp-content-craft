@@ -1,4 +1,4 @@
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useSiteContent } from "@/providers/SiteContentProvider";
 
 export function FooterSection() {
   const { get } = useSiteContent();
@@ -19,10 +19,10 @@ export function FooterSection() {
           {/* Contact */}
           <div className="text-center md:text-right">
             <a 
-              href={`mailto:${get('footer', 'email', 'ping@klyp.travel')}`}
+              href={`mailto:${get('footer', 'contactEmail', 'ping@klyp.travel')}`}
               className="text-gray-300 hover:text-white transition-colors"
             >
-              {get('footer', 'email', 'ping@klyp.travel')}
+              {get('footer', 'contactEmail', 'ping@klyp.travel')}
             </a>
           </div>
         </div>
@@ -32,16 +32,10 @@ export function FooterSection() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
             <div>{get('footer', 'copyright', '© 2024 KLYP. All rights reserved.')}</div>
             <div className="flex items-center gap-6">
-              <a 
-                href={get('footer', 'privacyLink', '#')} 
-                className="hover:text-white transition-colors"
-              >
+              <a href="#" className="hover:text-white transition-colors">
                 {get('footer', 'privacyText', 'Privacy')}
               </a>
-              <a 
-                href={get('footer', 'termsLink', '#')} 
-                className="hover:text-white transition-colors"
-              >
+              <a href="#" className="hover:text-white transition-colors">
                 {get('footer', 'termsText', 'Terms')}
               </a>
               <a href="/admin" className="hover:text-white transition-colors">Admin</a>

@@ -1,6 +1,6 @@
 import { Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useSiteContent } from "@/providers/SiteContentProvider";
 
 interface HeroSectionProps {
   onOpenSignUp: () => void;
@@ -14,7 +14,7 @@ export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
       {/* Logo at top */}
       <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
         <img 
-          src={get('hero', 'logoUrl', '/brand/logo.png')} 
+          src={get('hero', 'logoUrl', '/brand/logo.png')}
           alt={get('hero', 'logoAlt', 'KLYP Logo')}
           className="h-16 w-auto cursor-pointer hover:scale-105 transition-transform"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -30,13 +30,13 @@ export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
 
         {/* Main Headline */}
         <h1 className="text-5xl md:text-7xl font-bold mb-4">
-          <div className="mb-2">{get('hero', 'headline1', 'KLYP Workbench')}</div>
-          <div className="text-gradient">{get('hero', 'headline2', 'The Future of Travel')}</div>
+          <div className="mb-2">{get('hero', 'mainTitle', 'KLYP Workbench')}</div>
+          <div className="text-gradient">{get('hero', 'subtitle', 'The Future of Travel')}</div>
         </h1>
 
         {/* Subheadline */}
         <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-          {get('hero', 'subheadline', 'Digitalize the chaos of servicing, and plug into a GenAI‑native universal ERP—without writing a line of code.')}
+          {get('hero', 'description', 'Digitalize the chaos of servicing, and plug into a GenAI‑native universal ERP—without writing a line of code.')}
         </p>
 
         {/* Primary CTA */}

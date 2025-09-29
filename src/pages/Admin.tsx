@@ -133,6 +133,66 @@ export default function Admin() {
     }
   };
 
+  const saveContent = async (id: string, section: string, content: string) => {
+    try {
+      let parsedContent;
+      try {
+        parsedContent = JSON.parse(content);
+      } catch (e) {
+        throw new Error('Invalid JSON format');
+      }
+
+      const { error } = await supabase
+        .from('site_content')
+        .update({ content: parsedContent })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Content updated successfully",
+      });
+
+      await fetchContent();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save content",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const createSection = async () => {
+    const section = prompt('Enter section name (e.g., hero, demo, footer):');
+    if (!section) return;
+
+    try {
+      const { error } = await supabase
+        .from('site_content')
+        .insert({
+          section,
+          content: {}
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Section created successfully",
+      });
+
+      await fetchContent();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create section",
+        variant: "destructive",
+      });
+    }
+  };
+
   const saveContentChanges = async (id: string, section: string) => {
     try {
       const contentText = editingContent[id];
