@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SignUpModalProps {
   isOpen: boolean;
@@ -54,8 +55,21 @@ export function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
     }
 
     try {
-      // Simulate API call (would connect to Supabase)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Save to Supabase
+      const { error } = await supabase
+        .from('founders_list')
+        .insert({
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone || null,
+          business: formData.business,
+          integrations: formData.integrations || null,
+          ip_hash: null, // Could add IP tracking later
+        });
+
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: "Success!",
@@ -71,6 +85,7 @@ export function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
       });
       onClose();
     } catch (error) {
+      console.error('Signup error:', error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
