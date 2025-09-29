@@ -1,4 +1,8 @@
+import { useSiteContent } from "@/hooks/useSiteContent";
+
 export function FooterSection() {
+  const { get } = useSiteContent();
+
   return (
     <footer className="py-12 px-4 bg-gray-900 text-white">
       <div className="max-w-6xl mx-auto">
@@ -6,8 +10,8 @@ export function FooterSection() {
           {/* Logo */}
           <div className="flex items-center gap-4">
             <img 
-              src="/brand/logo.png" 
-              alt="KLYP Logo" 
+              src={get('footer', 'logoUrl', '/brand/logo.png')}
+              alt={get('footer', 'logoAlt', 'KLYP Logo')}
               className="h-8 w-auto"
             />
           </div>
@@ -15,10 +19,10 @@ export function FooterSection() {
           {/* Contact */}
           <div className="text-center md:text-right">
             <a 
-              href="mailto:ping@klyp.travel" 
+              href={`mailto:${get('footer', 'email', 'ping@klyp.travel')}`}
               className="text-gray-300 hover:text-white transition-colors"
             >
-              ping@klyp.travel
+              {get('footer', 'email', 'ping@klyp.travel')}
             </a>
           </div>
         </div>
@@ -26,10 +30,20 @@ export function FooterSection() {
         {/* Bottom row */}
         <div className="mt-8 pt-8 border-t border-gray-700">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-            <div>© 2024 KLYP. All rights reserved.</div>
+            <div>{get('footer', 'copyright', '© 2024 KLYP. All rights reserved.')}</div>
             <div className="flex items-center gap-6">
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
+              <a 
+                href={get('footer', 'privacyLink', '#')} 
+                className="hover:text-white transition-colors"
+              >
+                {get('footer', 'privacyText', 'Privacy')}
+              </a>
+              <a 
+                href={get('footer', 'termsLink', '#')} 
+                className="hover:text-white transition-colors"
+              >
+                {get('footer', 'termsText', 'Terms')}
+              </a>
               <a href="/admin" className="hover:text-white transition-colors">Admin</a>
             </div>
           </div>

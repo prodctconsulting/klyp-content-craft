@@ -47,6 +47,7 @@ export default function Admin() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchSubmissions();
+      fetchContent();
     }
   }, [isAuthenticated]);
 
@@ -127,6 +128,62 @@ export default function Admin() {
       toast({
         title: "Error",
         description: "Failed to update submission",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveContentChanges = async (id: string, section: string) => {
+    try {
+      const contentText = editingContent[id];
+      const contentObj = JSON.parse(contentText);
+      
+      const { error } = await supabase
+        .from('site_content')
+        .update({ content: contentObj })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Updated ${section} content`,
+      });
+      
+      fetchContent(); // Refresh the data
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save content. Check JSON format.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const createNewSection = async () => {
+    try {
+      const sectionName = prompt("Enter section name:");
+      if (!sectionName) return;
+
+      const { error } = await supabase
+        .from('site_content')
+        .insert({
+          section: sectionName,
+          content: {}
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Created ${sectionName} section`,
+      });
+      
+      fetchContent();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create section",
         variant: "destructive",
       });
     }
@@ -256,13 +313,52 @@ export default function Admin() {
 
           <TabsContent value="content">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Content Management</CardTitle>
+                <Button onClick={createNewSection} variant="outline">
+                  Add New Section
+                </Button>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  Content management features coming soon...
-                </div>
+                {loadingContent ? (
+                  <div className="text-center py-8">Loading content...</div>
+                ) : contentRows.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No content sections yet. 
+                    <Button onClick={createNewSection} variant="link">Create your first section</Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {contentRows.map((row) => (
+                      <div key={row.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-lg font-semibold capitalize">{row.section} Section</h3>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveContentChanges(row.id, row.section)}
+                            >
+                              Save Changes
+                            </Button>
+                          </div>
+                        </div>
+                        <Textarea
+                          value={editingContent[row.id] || ''}
+                          onChange={(e) => setEditingContent(prev => ({
+                            ...prev,
+                            [row.id]: e.target.value
+                          }))}
+                          rows={12}
+                          className="font-mono text-sm"
+                          placeholder="JSON content..."
+                        />
+                        <div className="text-xs text-gray-500 mt-2">
+                          Last updated: {new Date(row.updated_at).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

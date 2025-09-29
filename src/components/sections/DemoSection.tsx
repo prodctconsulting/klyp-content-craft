@@ -1,21 +1,39 @@
 import { Play } from "lucide-react";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 export function DemoSection() {
+  const { get } = useSiteContent();
+
   return (
     <section className="py-20 px-4 bg-gray-50">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-8">See It in Action</h2>
+        <h2 className="text-3xl md:text-4xl font-bold mb-8">
+          {get('demo', 'title', 'See It in Action')}
+        </h2>
         
         <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden">
           {/* Demo placeholder - would be replaced with actual video in admin */}
           <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
-            <div className="text-center">
-              <div className="p-6 bg-white rounded-full shadow-lg mb-4 mx-auto w-fit">
-                <Play className="h-12 w-12 text-pink-500" />
+            {get('demo', 'videoUrl') ? (
+              <video
+                src={get('demo', 'videoUrl')}
+                poster={get('demo', 'videoPoster')}
+                controls
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-center">
+                <div className="p-6 bg-white rounded-full shadow-lg mb-4 mx-auto w-fit">
+                  <Play className="h-12 w-12 text-pink-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                  {get('demo', 'placeholderTitle', 'Demo Video Coming Soon')}
+                </h3>
+                <p className="text-gray-600">
+                  {get('demo', 'placeholderDescription', 'Watch how KLYP Workbench revolutionizes travel operations')}
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">Demo Video Coming Soon</h3>
-              <p className="text-gray-600">Watch how KLYP Workbench revolutionizes travel operations</p>
-            </div>
+            )}
           </div>
           
           {/* Video controls placeholder */}
@@ -25,9 +43,13 @@ export function DemoSection() {
                 <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                   <Play className="h-5 w-5" />
                 </button>
-                <div className="text-sm text-gray-600">0:00 / 2:30</div>
+                <div className="text-sm text-gray-600">
+                  {get('demo', 'duration', '0:00 / 2:30')}
+                </div>
               </div>
-              <div className="text-sm text-gray-600">HD Quality</div>
+              <div className="text-sm text-gray-600">
+                {get('demo', 'quality', 'HD Quality')}
+              </div>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { AudienceSection } from "@/components/sections/AudienceSection";
 import { FoundingUserSection } from "@/components/sections/FoundingUserSection";
 import { FooterSection } from "@/components/sections/FooterSection";
 import { SignUpModal } from "@/components/SignUpModal";
+import { SiteContentProvider } from "@/hooks/useSiteContent";
 
 export default function LandingPage() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
@@ -16,20 +17,22 @@ export default function LandingPage() {
   const closeSignUpModal = () => setIsSignUpModalOpen(false);
 
   return (
-    <div className="min-h-screen">
-      <HeroSection onOpenSignUp={openSignUpModal} />
-      <WhyOSSection />
-      <BuildingSection />
-      <DemoSection />
-      <PricingSection onOpenSignUp={openSignUpModal} />
-      <AudienceSection />
-      <FoundingUserSection onOpenSignUp={openSignUpModal} />
-      <FooterSection />
-      
-      <SignUpModal 
-        isOpen={isSignUpModalOpen} 
-        onClose={closeSignUpModal} 
-      />
-    </div>
+    <SiteContentProvider>
+      <div className="min-h-screen">
+        <HeroSection onOpenSignUp={openSignUpModal} />
+        <WhyOSSection />
+        <BuildingSection />
+        <DemoSection />
+        <PricingSection onOpenSignUp={openSignUpModal} />
+        <AudienceSection />
+        <FoundingUserSection onOpenSignUp={openSignUpModal} />
+        <FooterSection />
+        
+        <SignUpModal 
+          isOpen={isSignUpModalOpen} 
+          onClose={closeSignUpModal} 
+        />
+      </div>
+    </SiteContentProvider>
   );
 }
