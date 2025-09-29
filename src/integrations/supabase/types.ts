@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          last_login: string | null
+          password_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          last_login?: string | null
+          password_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          last_login?: string | null
+          password_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      founders_list: {
+        Row: {
+          business: string
+          contacted: boolean | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          integrations: string | null
+          ip_hash: string | null
+          phone: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          business: string
+          contacted?: boolean | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          integrations?: string | null
+          ip_hash?: string | null
+          phone?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          business?: string
+          contacted?: boolean | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          integrations?: string | null
+          ip_hash?: string | null
+          phone?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
+      site_content: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          section: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          section: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          section?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
