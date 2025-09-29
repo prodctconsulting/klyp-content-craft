@@ -24,20 +24,49 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
-      // Query admin_users table directly
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .single();
-
-      if (error || !data) {
-        throw new Error('Invalid credentials');
-      }
-
-      // For now, since we can't use bcrypt properly in the browser, 
-      // we'll do a simple password check
+      // Simple credential check since we can't use bcrypt in browser
       if (email === 'admin@prodt.co' && password === 'ProDT@123456789') {
+        // Query admin_users table to get user data
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Database error:', error);
+          throw new Error('Database error');
+        }
+
+        // If no user found in DB, create one
+        if (!data) {
+          const { data: newUser, error: insertError } = await supabase
+            .from('admin_users')
+            .insert({
+              email: email,
+              password_hash: 'temp_hash' // Placeholder since we're not using bcrypt
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Insert error:', insertError);
+            throw new Error('Failed to create admin user');
+          }
+
+          const adminUser: AdminUser = {
+            id: newUser.id,
+            email: newUser.email,
+            created_at: newUser.created_at,
+            last_login: newUser.last_login
+          };
+
+          localStorage.setItem('admin_user', JSON.stringify(adminUser));
+          setUser(adminUser);
+          return { success: true };
+        }
+
+        // User exists, proceed with login
         const adminUser: AdminUser = {
           id: data.id,
           email: data.email,
@@ -60,6 +89,7 @@ export function useAuth() {
         throw new Error('Invalid credentials');
       }
     } catch (error) {
+      console.error('Login error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Login failed' 
