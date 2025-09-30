@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -46,7 +47,16 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
+      <div className="w-full max-w-md">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')} 
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Main Site
+        </Button>
+        <Card className="w-full">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <img 
@@ -93,6 +103,7 @@ export default function AdminLogin() {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

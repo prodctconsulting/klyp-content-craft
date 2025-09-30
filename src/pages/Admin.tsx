@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Users, Settings, FileText } from 'lucide-react';
+import { useSiteContent } from '@/providers/SiteContentProvider';
+import { LogOut, Users, Settings, FileText, Upload, Palette } from 'lucide-react';
 
 interface FounderSubmission {
   id: string;
@@ -31,12 +34,16 @@ export default function Admin() {
   const { user, logout, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { refresh } = useSiteContent();
   const [submissions, setSubmissions] = useState<FounderSubmission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
   const [contentRows, setContentRows] = useState<SiteContentRow[]>([]);
   const [loadingContent, setLoadingContent] = useState(true);
   const [editingContent, setEditingContent] = useState<Record<string, string>>({});
-  const [hasSession, setHasSession] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [primaryColor, setPrimaryColor] = useState('');
+  const [secondaryColor, setSecondaryColor] = useState('');
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -210,11 +217,111 @@ export default function Admin() {
         description: `Updated ${section} content`,
       });
       
-      fetchContent(); // Refresh the data
+      // Refresh both admin content and main site content
+      await fetchContent();
+      await refresh();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to save content. Check JSON format.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVideoUpload = async () => {
+    if (!videoFile) {
+      toast({
+        title: "Error",
+        description: "Please select a video file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingVideo(true);
+    try {
+      const fileExt = videoFile.name.split('.').pop();
+      const fileName = `demo-video-${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(filePath, videoFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('videos')
+        .getPublicUrl(filePath);
+
+      // Update demo section with video URL
+      const demoSection = contentRows.find(row => row.section === 'demo');
+      if (demoSection) {
+        const updatedContent = {
+          ...demoSection.content,
+          videoUrl: publicUrl,
+          videoType: 'upload'
+        };
+
+        const { error } = await supabase
+          .from('site_content')
+          .update({ content: updatedContent })
+          .eq('id', demoSection.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Video uploaded successfully",
+        });
+
+        await fetchContent();
+        await refresh();
+        setVideoFile(null);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload video",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const saveColorPalette = async () => {
+    try {
+      // Update CSS variables in site_content
+      const brandingSection = contentRows.find(row => row.section === 'branding');
+      
+      const updatedContent = {
+        ...brandingSection?.content,
+        primaryColor,
+        secondaryColor
+      };
+
+      const { error } = await supabase
+        .from('site_content')
+        .upsert({
+          section: 'branding',
+          content: updatedContent
+        }, { onConflict: 'section' });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Color palette updated. Refresh the main site to see changes.",
+      });
+
+      await fetchContent();
+      await refresh();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save color palette",
         variant: "destructive",
       });
     }
@@ -294,7 +401,7 @@ export default function Admin() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="submissions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
             <TabsTrigger value="submissions" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Submissions
@@ -303,9 +410,13 @@ export default function Admin() {
               <FileText className="h-4 w-4" />
               Content
             </TabsTrigger>
+            <TabsTrigger value="media" className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Media
+            </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Settings
+              <Palette className="h-4 w-4" />
+              Branding
             </TabsTrigger>
           </TabsList>
 
@@ -423,14 +534,94 @@ export default function Admin() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="media">
+            <Card>
+              <CardHeader>
+                <CardTitle>Video Upload</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="video">Demo Video</Label>
+                    <Input
+                      id="video"
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                      className="mt-2"
+                    />
+                    <p className="text-sm text-gray-500 mt-2">
+                      Upload a video for the demo section. Supported formats: MP4, WebM, MOV
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={handleVideoUpload} 
+                    disabled={!videoFile || uploadingVideo}
+                  >
+                    {uploadingVideo ? "Uploading..." : "Upload Video"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="settings">
             <Card>
               <CardHeader>
-                <CardTitle>Settings</CardTitle>
+                <CardTitle>Brand Colors</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  Settings panel coming soon...
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="primary">Primary Color (HSL)</Label>
+                    <Input
+                      id="primary"
+                      type="text"
+                      placeholder="e.g., 345 90% 55%"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      className="mt-2"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Enter HSL values (e.g., 345 90% 55% for pink)
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="secondary">Secondary Color (HSL)</Label>
+                    <Input
+                      id="secondary"
+                      type="text"
+                      placeholder="e.g., 280 90% 55%"
+                      value={secondaryColor}
+                      onChange={(e) => setSecondaryColor(e.target.value)}
+                      className="mt-2"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Enter HSL values (e.g., 280 90% 55% for purple)
+                    </p>
+                  </div>
+                  <Button onClick={saveColorPalette}>
+                    Save Color Palette
+                  </Button>
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-medium mb-2">Current Colors:</p>
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-8 h-8 rounded border"
+                          style={{ backgroundColor: primaryColor ? `hsl(${primaryColor})` : 'hsl(345 90% 55%)' }}
+                        />
+                        <span className="text-sm">Primary</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-8 h-8 rounded border"
+                          style={{ backgroundColor: secondaryColor ? `hsl(${secondaryColor})` : 'hsl(280 90% 55%)' }}
+                        />
+                        <span className="text-sm">Secondary</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -38,10 +38,26 @@ export function SiteContentProvider({ children }: { children: React.ReactNode })
 
       setContent(contentMap);
       setError(null);
+      
+      // Apply branding colors if available
+      const brandingContent = contentMap['branding'];
+      if (brandingContent?.primaryColor || brandingContent?.secondaryColor) {
+        applyBrandColors(brandingContent.primaryColor, brandingContent.secondaryColor);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load content');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const applyBrandColors = (primaryColor?: string, secondaryColor?: string) => {
+    const root = document.documentElement;
+    if (primaryColor) {
+      root.style.setProperty('--brand-pink', primaryColor);
+    }
+    if (secondaryColor) {
+      root.style.setProperty('--brand-purple', secondaryColor);
     }
   };
 
