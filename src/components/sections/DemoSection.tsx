@@ -8,6 +8,7 @@ export function DemoSection() {
   const autoplay = get('demo', 'autoplay', false);
   const loop = get('demo', 'loop', true);
   const muted = get('demo', 'muted', true);
+  const helper = get('demo', 'helper', 'Demo Video Coming Soon');
 
   return (
     <section className="py-20 px-4 bg-gray-50">
@@ -40,7 +41,7 @@ export function DemoSection() {
                     <Play className="h-12 w-12 text-pink-500" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                    {get('demo', 'helper', 'Demo Video Coming Soon')}
+                    {helper}
                   </h3>
                   <p className="text-gray-600">
                     Upload a video in the admin panel

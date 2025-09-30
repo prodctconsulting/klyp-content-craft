@@ -204,38 +204,25 @@ export default function Admin() {
     try {
       const contentText = editingContent[id];
       const contentObj = JSON.parse(contentText);
-      
-      const { error } = await supabase
-        .from('site_content')
-        .update({ content: contentObj })
-        .eq('id', id);
 
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Updated ${section} content`,
+      const { data, error } = await supabase.functions.invoke('update-site-content', {
+        body: { id, content: contentObj },
       });
-      
-      // Refresh both admin content and main site content
+
+      // functions.invoke returns { data, error }, where error is network error; edge returns error in body
+      if ((error as any) || (data as any)?.error) throw (error as any) || new Error((data as any)?.error);
+
+      toast({ title: 'Success', description: `Updated ${section} content` });
       await fetchContent();
       await refresh();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save content. Check JSON format.",
-        variant: "destructive",
-      });
+      toast({ title: 'Error', description: 'Failed to save content. Check JSON format.', variant: 'destructive' });
     }
   };
 
   const handleVideoUpload = async () => {
     if (!videoFile) {
-      toast({
-        title: "Error",
-        description: "Please select a video file",
-        variant: "destructive",
-      });
+      toast({ title: 'Error', description: 'Please select a video file', variant: 'destructive' });
       return;
     }
 
@@ -245,85 +232,125 @@ export default function Admin() {
       const fileName = `demo-video-${Date.now()}.${fileExt}`;
       const filePath = fileName;
 
-      const { error: uploadError } = await supabase.storage
-        .from('videos')
-        .upload(filePath, videoFile);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('videos')
-        .getPublicUrl(filePath);
-
-      // Update demo section with video URL
-      const demoSection = contentRows.find(row => row.section === 'demo');
-      if (demoSection) {
-        const updatedContent = {
-          ...demoSection.content,
-          videoUrl: publicUrl,
-          videoType: 'upload'
-        };
-
-        const { error } = await supabase
-          .from('site_content')
-          .update({ content: updatedContent })
-          .eq('id', demoSection.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Video uploaded successfully",
-        });
-
-        await fetchContent();
-        await refresh();
-        setVideoFile(null);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload video",
-        variant: "destructive",
+      const { data: signed, error } = await supabase.functions.invoke('get-upload-url', {
+        body: { bucket: 'videos', path: filePath, contentType: videoFile.type },
       });
+      if ((error as any) || (signed as any)?.error) throw (error as any) || new Error((signed as any)?.error);
+
+      const uploadRes = await fetch((signed as any).signedUrl, {
+        method: 'PUT',
+        headers: { 'content-type': videoFile.type },
+        body: videoFile,
+      });
+      if (!uploadRes.ok) throw new Error('Upload failed');
+
+      const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(filePath);
+
+      const demoSection = contentRows.find(row => row.section === 'demo');
+      const updatedContent = {
+        ...(demoSection?.content || {}),
+        videoUrl: publicUrl,
+        videoType: 'upload',
+      };
+
+      const { data: updated, error: upErr } = await supabase.functions.invoke('update-site-content', {
+        body: demoSection ? { id: demoSection.id, content: updatedContent } : { section: 'demo', content: updatedContent },
+      });
+      if ((upErr as any) || (updated as any)?.error) throw (upErr as any) || new Error((updated as any)?.error);
+
+      toast({ title: 'Success', description: 'Video uploaded successfully' });
+      await fetchContent();
+      await refresh();
+      setVideoFile(null);
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to upload video', variant: 'destructive' });
     } finally {
       setUploadingVideo(false);
     }
   };
 
+  // Helpers to convert HEX <-> HSL string ("h s% l%")
+  const hexToHslString = (hex: string) => {
+    const res = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!res) return '';
+    const r = parseInt(res[1], 16) / 255;
+    const g = parseInt(res[2], 16) / 255;
+    const b = parseInt(res[3], 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  };
+
+  const hslStringToHex = (hsl?: string) => {
+    if (!hsl) return '';
+    const m = hsl.match(/^(\d{1,3})\s+(\d{1,3})%\s+(\d{1,3})%$/);
+    if (!m) return '';
+    let h = parseInt(m[1], 10) / 360;
+    const s = parseInt(m[2], 10) / 100;
+    const l = parseInt(m[3], 10) / 100;
+    if (s === 0) {
+      const v = Math.round(l * 255).toString(16).padStart(2, '0');
+      return `#${v}${v}${v}`;
+    }
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    const r = Math.round(hue2rgb(p, q, h + 1/3) * 255);
+    const g = Math.round(hue2rgb(p, q, h) * 255);
+    const b = Math.round(hue2rgb(p, q, h - 1/3) * 255);
+    return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+  };
+
+  useEffect(() => {
+    const branding = contentRows.find(r => r.section === 'branding');
+    if (branding) {
+      const pc = branding.content?.primaryColor;
+      const sc = branding.content?.secondaryColor;
+      if (pc) setPrimaryColor(hslStringToHex(pc) || '');
+      if (sc) setSecondaryColor(hslStringToHex(sc) || '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentRows.length]);
+
   const saveColorPalette = async () => {
     try {
-      // Update CSS variables in site_content
+      const primaryHsl = primaryColor.startsWith('#') ? hexToHslString(primaryColor) : primaryColor;
+      const secondaryHsl = secondaryColor.startsWith('#') ? hexToHslString(secondaryColor) : secondaryColor;
+
       const brandingSection = contentRows.find(row => row.section === 'branding');
-      
       const updatedContent = {
-        ...brandingSection?.content,
-        primaryColor,
-        secondaryColor
+        ...(brandingSection?.content || {}),
+        primaryColor: primaryHsl,
+        secondaryColor: secondaryHsl,
       };
 
-      const { error } = await supabase
-        .from('site_content')
-        .upsert({
-          section: 'branding',
-          content: updatedContent
-        }, { onConflict: 'section' });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Color palette updated. Refresh the main site to see changes.",
+      const { data, error } = await supabase.functions.invoke('update-site-content', {
+        body: brandingSection ? { id: brandingSection.id, content: updatedContent } : { section: 'branding', content: updatedContent },
       });
+      if ((error as any) || (data as any)?.error) throw (error as any) || new Error((data as any)?.error);
 
+      toast({ title: 'Success', description: 'Color palette updated' });
       await fetchContent();
       await refresh();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save color palette",
-        variant: "destructive",
-      });
+      toast({ title: 'Error', description: 'Failed to save color palette', variant: 'destructive' });
     }
   };
 
@@ -573,31 +600,31 @@ export default function Admin() {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="primary">Primary Color (HSL)</Label>
+                    <Label htmlFor="primary">Primary Color (Hex)</Label>
                     <Input
                       id="primary"
                       type="text"
-                      placeholder="e.g., 345 90% 55%"
+                      placeholder="#FF3B81"
                       value={primaryColor}
                       onChange={(e) => setPrimaryColor(e.target.value)}
                       className="mt-2"
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Enter HSL values (e.g., 345 90% 55% for pink)
+                      Enter a hex color like #FF3B81
                     </p>
                   </div>
                   <div>
-                    <Label htmlFor="secondary">Secondary Color (HSL)</Label>
+                    <Label htmlFor="secondary">Secondary Color (Hex)</Label>
                     <Input
                       id="secondary"
                       type="text"
-                      placeholder="e.g., 280 90% 55%"
+                      placeholder="#7C3AED"
                       value={secondaryColor}
                       onChange={(e) => setSecondaryColor(e.target.value)}
                       className="mt-2"
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Enter HSL values (e.g., 280 90% 55% for purple)
+                      Enter a hex color like #7C3AED
                     </p>
                   </div>
                   <Button onClick={saveColorPalette}>
@@ -609,14 +636,14 @@ export default function Admin() {
                       <div className="flex items-center gap-2">
                         <div 
                           className="w-8 h-8 rounded border"
-                          style={{ backgroundColor: primaryColor ? `hsl(${primaryColor})` : 'hsl(345 90% 55%)' }}
+                          style={{ backgroundColor: primaryColor || '#FF3B81' }}
                         />
                         <span className="text-sm">Primary</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div 
                           className="w-8 h-8 rounded border"
-                          style={{ backgroundColor: secondaryColor ? `hsl(${secondaryColor})` : 'hsl(280 90% 55%)' }}
+                          style={{ backgroundColor: secondaryColor || '#7C3AED' }}
                         />
                         <span className="text-sm">Secondary</span>
                       </div>
