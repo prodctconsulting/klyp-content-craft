@@ -23,21 +23,32 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders });
     }
 
-    const { bucket, path, contentType } = await req.json();
+    const { action, id } = await req.json();
 
-    if (!bucket || !path) {
-      return new Response(JSON.stringify({ error: 'bucket and path are required' }), { status: 400 });
+    if (action === 'list') {
+      const { data, error } = await adminClient
+        .from('founders_list')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return new Response(JSON.stringify({ data }), { headers: { ...corsHeaders, 'content-type': 'application/json' } });
     }
 
-    const { data, error } = await adminClient.storage
-      .from(bucket)
-      .createSignedUploadUrl(path);
+    if (action === 'mark_contacted') {
+      if (!id) {
+        return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400, headers: corsHeaders });
+      }
+      const { data, error } = await adminClient
+        .from('founders_list')
+        .update({ contacted: true })
+        .eq('id', id)
+        .select('*')
+        .maybeSingle();
+      if (error) throw error;
+      return new Response(JSON.stringify({ data }), { headers: { ...corsHeaders, 'content-type': 'application/json' } });
+    }
 
-    if (error) throw error;
-
-    return new Response(JSON.stringify({ signedUrl: data.signedUrl, token: data.token, path, contentType }), {
-      headers: { ...corsHeaders, 'content-type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ error: 'Unknown action' }), { status: 400, headers: corsHeaders });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });

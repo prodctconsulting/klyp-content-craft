@@ -9,10 +9,18 @@ const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
   try {
     if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders });
     }
 
     const { id, section, content } = await req.json();
@@ -45,10 +53,10 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ data: result }), {
-      headers: { 'content-type': 'application/json' },
+      headers: { ...corsHeaders, 'content-type': 'application/json' },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
   }
 });

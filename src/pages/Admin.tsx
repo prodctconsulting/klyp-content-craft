@@ -85,13 +85,11 @@ export default function Admin() {
 
   const fetchSubmissions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('founders_list')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setSubmissions(data || []);
+      const { data, error } = await supabase.functions.invoke('admin-founders', {
+        body: { action: 'list' },
+      });
+      if ((error as any) || (data as any)?.error) throw (error as any) || new Error((data as any)?.error);
+      setSubmissions(((data as any)?.data) || []);
     } catch (error) {
       toast({
         title: "Error",
@@ -114,12 +112,10 @@ export default function Admin() {
 
   const markAsContacted = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('founders_list')
-        .update({ contacted: true })
-        .eq('id', id);
-
-      if (error) throw error;
+      const { data, error } = await supabase.functions.invoke('admin-founders', {
+        body: { action: 'mark_contacted', id },
+      });
+      if ((error as any) || (data as any)?.error) throw (error as any) || new Error((data as any)?.error);
 
       setSubmissions(prev => 
         prev.map(sub => 
@@ -239,7 +235,7 @@ export default function Admin() {
 
       const uploadRes = await fetch((signed as any).signedUrl, {
         method: 'PUT',
-        headers: { 'content-type': videoFile.type },
+        headers: { 'content-type': videoFile.type, 'x-upsert': 'true' },
         body: videoFile,
       });
       if (!uploadRes.ok) throw new Error('Upload failed');
@@ -359,14 +355,10 @@ export default function Admin() {
       const sectionName = prompt("Enter section name:");
       if (!sectionName) return;
 
-      const { error } = await supabase
-        .from('site_content')
-        .insert({
-          section: sectionName,
-          content: {}
-        });
-
-      if (error) throw error;
+      const { data, error } = await supabase.functions.invoke('update-site-content', {
+        body: { section: sectionName, content: {} },
+      });
+      if ((error as any) || (data as any)?.error) throw (error as any) || new Error((data as any)?.error);
 
       toast({
         title: "Success",
