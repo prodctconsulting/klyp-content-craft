@@ -9,6 +9,14 @@ interface HeroSectionProps {
 export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
   const { get } = useSiteContent();
 
+  // Primary keys with graceful fallbacks to support older Admin JSON keys
+  const badgeText = get('hero', 'badgeText', get('hero', 'secondaryBadgeText', 'Built for visionary travel agencies, TMCs, and tour creators'));
+  const mainTitle = get('hero', 'mainTitle', get('hero', 'titleLine1', 'KLYP Workbench'));
+  const subtitle = get('hero', 'subtitle', get('hero', 'titleLine2Gradient', 'The Future of Travel'));
+  const description = get('hero', 'description', get('hero', 'subtext', 'Digitalize the chaos of servicing, and plug into a GenAI‑native universal ERP—without writing a line of code.'));
+  const ctaText = get('hero', 'ctaText', get('hero', 'ctaLabel', 'Get Started Now'));
+  const supportText = get('hero', 'supportText', get('hero', 'secondaryBadgeText', 'Early Access: Starting from just $99/month'));
+
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 text-center">
       {/* Logo at top */}
@@ -25,18 +33,18 @@ export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
         {/* Badge */}
         <div className="badge-pill mb-8 mx-auto w-fit">
           <Plane className="h-4 w-4 text-pink-500" />
-          <span>{get('hero', 'badgeText', 'Built for visionary travel agencies, TMCs, and tour creators')}</span>
+          <span>{badgeText}</span>
         </div>
 
         {/* Main Headline */}
         <h1 className="text-5xl md:text-7xl font-bold mb-4">
-          <div className="mb-2">{get('hero', 'mainTitle', 'KLYP Workbench')}</div>
-          <div className="text-gradient">{get('hero', 'subtitle', 'The Future of Travel')}</div>
+          <div className="mb-2">{mainTitle}</div>
+          <div className="text-gradient">{subtitle}</div>
         </h1>
 
         {/* Subheadline */}
         <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-          {get('hero', 'description', 'Digitalize the chaos of servicing, and plug into a GenAI‑native universal ERP—without writing a line of code.')}
+          {description}
         </p>
 
         {/* Primary CTA */}
@@ -44,12 +52,12 @@ export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
           onClick={onOpenSignUp}
           className="btn-hero text-lg mb-6"
         >
-          {get('hero', 'ctaText', 'Get Started Now')}
+          {ctaText}
         </Button>
 
         {/* Support pill */}
         <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
-          {get('hero', 'supportText', 'Early Access: Starting from just $99/month')}
+          {supportText}
         </div>
       </div>
 

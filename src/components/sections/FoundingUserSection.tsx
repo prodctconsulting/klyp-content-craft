@@ -1,17 +1,27 @@
 import { Edit3, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSiteContent } from "@/providers/SiteContentProvider";
 
 interface FoundingUserSectionProps {
   onOpenSignUp: () => void;
 }
 
-const features = [
+const defaultFeatures = [
   "No setup required",
-  "White‑glove onboarding", 
+  "White‑glove onboarding",
   "Join 50+ founding partners"
 ];
 
 export function FoundingUserSection({ onOpenSignUp }: FoundingUserSectionProps) {
+  const { get } = useSiteContent();
+  const title = get('founding', 'title', 'Be a Founding User');
+  const subtitle = get('founding', 'subtitle', "We're onboarding a select group of early partners before launch. Get early access, shape the roadmap, and automate your travel operations from Day 1.");
+  const ctaLabel = get('founding', 'ctaLabel', 'Join Now');
+  const cardTitle = get('founding', 'cardTitle', 'Join the List');
+  const cardHelper = get('founding', 'cardHelper', "Fill in a few quick questions—we'll personalize your onboarding.");
+  const featuresLine = get('founding', 'featuresLine', 'No setup required • White‑glove onboarding • Join 50+ founding partners');
+  const features = featuresLine ? String(featuresLine).split('•').map(s => s.trim()).filter(Boolean) : defaultFeatures;
+
   return (
     <section className="py-20 px-4">
       <div className="max-w-4xl mx-auto">
@@ -20,10 +30,10 @@ export function FoundingUserSection({ onOpenSignUp }: FoundingUserSectionProps) 
             <div className="p-3 bg-orange-100 rounded-full">
               <Edit3 className="h-6 w-6 text-orange-600" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold">Be a Founding User</h2>
+            <h2 className="text-3xl md:text-4xl font-bold">{title}</h2>
           </div>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            We're onboarding a select group of early partners before launch. Get early access, shape the roadmap, and automate your travel operations from Day 1.
+            {subtitle}
           </p>
         </div>
 
@@ -37,9 +47,9 @@ export function FoundingUserSection({ onOpenSignUp }: FoundingUserSectionProps) 
               </div>
               
               <div className="flex-1">
-                <h3 className="text-2xl font-bold mb-2">Join the List</h3>
+                <h3 className="text-2xl font-bold mb-2">{cardTitle}</h3>
                 <p className="text-gray-600 mb-4">
-                  Fill in a few quick questions—we'll personalize your onboarding.
+                  {cardHelper}
                 </p>
               </div>
               
@@ -48,7 +58,7 @@ export function FoundingUserSection({ onOpenSignUp }: FoundingUserSectionProps) 
                   onClick={onOpenSignUp}
                   className="btn-hero"
                 >
-                  Join Now
+                  {ctaLabel}
                 </Button>
               </div>
             </div>
@@ -56,7 +66,7 @@ export function FoundingUserSection({ onOpenSignUp }: FoundingUserSectionProps) 
 
           <div className="mt-8 text-center">
             <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-gray-600">
-              {features.map((feature, index) => (
+              {features.map((feature: string, index: number) => (
                 <span key={index} className="flex items-center gap-2">
                   {feature}
                   {index < features.length - 1 && (
