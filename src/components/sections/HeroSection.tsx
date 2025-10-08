@@ -24,7 +24,7 @@ export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
         <img 
           src={get('hero', 'logoUrl', '/brand/logo.png')}
           alt={get('hero', 'logoAlt', 'KLYP Logo')}
-          className="h-16 w-auto cursor-pointer hover:scale-105 transition-transform"
+          className="h-24 w-auto cursor-pointer hover:scale-105 transition-transform"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         />
       </div>
