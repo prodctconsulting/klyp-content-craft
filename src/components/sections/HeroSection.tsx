@@ -54,7 +54,7 @@ export function HeroSection({
         </Button>
 
         {/* Support pill */}
-        <div className="inline-flex items-center py-2 text-blue-700 text-sm font-medium rounded-none px-[28px] bg-slate-50/0">
+        <div className="inline-flex items-center text-blue-700 text-sm font-medium rounded-none bg-slate-50/0 mx-0 py-0 px-0">
           {supportText}
         </div>
       </div>
