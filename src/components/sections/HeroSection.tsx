@@ -49,13 +49,13 @@ export function HeroSection({
         </p>
 
         {/* Primary CTA */}
-        <Button onClick={onOpenSignUp} className="btn-hero text-lg mb-6 px-[29px]">
-          {ctaText}
-        </Button>
+        <div className="flex flex-col items-center gap-4">
+          <Button onClick={onOpenSignUp} className="btn-hero text-lg px-[29px]">
+            {ctaText}
+          </Button>
 
-        {/* Support text */}
-        <div className="inline-flex items-center justify-center text-muted-foreground text-sm font-medium mt-2">
-          <span className="px-4 py-2 rounded-full bg-accent/30 backdrop-blur-sm border border-border/50">
+          {/* Support text */}
+          <span className="px-4 py-2 rounded-full bg-accent/30 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-medium">
             {supportText}
           </span>
         </div>
