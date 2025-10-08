@@ -53,9 +53,11 @@ export function HeroSection({
           {ctaText}
         </Button>
 
-        {/* Support pill */}
-        <div className="inline-flex items-center text-blue-700 text-sm font-medium rounded-none bg-slate-50/0 mx-0 py-0 px-0">
-          {supportText}
+        {/* Support text */}
+        <div className="inline-flex items-center justify-center text-muted-foreground text-sm font-medium mt-2">
+          <span className="px-4 py-2 rounded-full bg-accent/30 backdrop-blur-sm border border-border/50">
+            {supportText}
+          </span>
         </div>
       </div>
 
