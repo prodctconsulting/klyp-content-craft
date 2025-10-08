@@ -21,12 +21,15 @@ export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 text-center">
       {/* Logo at top */}
       <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
-        <img 
-          src={get('hero', 'logoUrl', '/brand/logo.png')}
-          alt={get('hero', 'logoAlt', 'KLYP Logo')}
-          className="h-24 w-auto cursor-pointer hover:scale-105 transition-transform"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        />
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+          <img 
+            src={get('hero', 'logoUrl', '/brand/logo.png')}
+            alt={get('hero', 'logoAlt', 'KLYP Logo')}
+            className="relative h-36 w-auto cursor-pointer hover:scale-110 transition-all duration-300 drop-shadow-lg"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          />
+        </div>
       </div>
 
       <div className="max-w-4xl mx-auto pt-24">
