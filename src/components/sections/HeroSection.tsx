@@ -1,13 +1,15 @@
 import { Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteContent } from "@/providers/SiteContentProvider";
-
 interface HeroSectionProps {
   onOpenSignUp: () => void;
 }
-
-export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
-  const { get } = useSiteContent();
+export function HeroSection({
+  onOpenSignUp
+}: HeroSectionProps) {
+  const {
+    get
+  } = useSiteContent();
 
   // Primary keys with graceful fallbacks to support older Admin JSON keys
   const badgeText = get('hero', 'badgeText', get('hero', 'secondaryBadgeText', 'Built for visionary travel agencies, TMCs, and tour creators'));
@@ -16,19 +18,15 @@ export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
   const description = get('hero', 'description', get('hero', 'subtext', 'Digitalize the chaos of servicing, and plug into a GenAI‑native universal ERP—without writing a line of code.'));
   const ctaText = get('hero', 'ctaText', get('hero', 'ctaLabel', 'Get Started Now'));
   const supportText = get('hero', 'supportText', get('hero', 'secondaryBadgeText', 'Early Access: Starting from just $99/month'));
-
-  return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 text-center">
+  return <section className="relative min-h-screen flex flex-col items-center justify-center px-4 text-center">
       {/* Logo at top */}
       <div className="absolute top-12 left-1/2 transform -translate-x-1/2">
         <div className="relative group px-8">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-          <img 
-            src={get('hero', 'logoUrl', '/brand/logo.png')}
-            alt={get('hero', 'logoAlt', 'KLYP Logo')}
-            className="relative h-32 w-auto cursor-pointer hover:scale-110 transition-all duration-300 drop-shadow-lg"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          />
+          <img src={get('hero', 'logoUrl', '/brand/logo.png')} alt={get('hero', 'logoAlt', 'KLYP Logo')} className="relative h-32 w-auto cursor-pointer hover:scale-110 transition-all duration-300 drop-shadow-lg" onClick={() => window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        })} />
         </div>
       </div>
 
@@ -51,15 +49,12 @@ export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
         </p>
 
         {/* Primary CTA */}
-        <Button 
-          onClick={onOpenSignUp}
-          className="btn-hero text-lg mb-6"
-        >
+        <Button onClick={onOpenSignUp} className="btn-hero text-lg mb-6 px-[29px]">
           {ctaText}
         </Button>
 
         {/* Support pill */}
-        <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
+        <div className="inline-flex items-center py-2 text-blue-700 text-sm font-medium rounded-none px-[28px] bg-slate-50/0">
           {supportText}
         </div>
       </div>
@@ -70,6 +65,5 @@ export function HeroSection({ onOpenSignUp }: HeroSectionProps) {
           <div className="w-1 h-3 bg-gray-300 rounded-full mt-2 animate-pulse"></div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
